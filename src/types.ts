@@ -16,6 +16,9 @@ export type ImgCropProps = {
   showReset?: boolean;
   resetText?: string;
 
+  ratioX?:number;
+  ratioY?:number;
+
   aspect?: number;
   minZoom?: number;
   maxZoom?: number;
@@ -83,6 +86,8 @@ export type EasyCropProps = {
     | 'rotationSlider'
     | 'aspectSlider'
     | 'showReset'
+    | 'ratioX'
+    | 'ratioY'
     | 'aspect'
     | 'minZoom'
     | 'maxZoom'

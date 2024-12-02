@@ -28,6 +28,9 @@ const ImgCrop = forwardRef<CropperRef, ImgCropProps>((props, cropperRef) => {
     showReset = false,
     resetText,
 
+    ratioX = 1,
+    ratioY = 1,
+    
     aspect = 1,
     minZoom = 1,
     maxZoom = 3,
@@ -59,6 +62,40 @@ const ImgCrop = forwardRef<CropperRef, ImgCropProps>((props, cropperRef) => {
    * crop
    */
   const easyCropRef = useRef<EasyCropRef>(null);
+
+  const adjustCropSize = (mediaSize: { width: number; height: number; naturalWidth: number; naturalHeight: number }) => {
+    const { width, height, naturalWidth, naturalHeight } = mediaSize;
+    let cropAreaWidth = width;
+    let cropAreaHeight = height;
+    let cropImgWidth = naturalWidth;
+    let cropImgHeight = naturalHeight;
+    let cropWidth = width;
+    let cropHeight = height;
+  
+    if (ratioX != null && ratioY != null) {
+      const awg = Math.floor(cropAreaWidth / ratioX);
+      const ahg = Math.floor(cropAreaHeight / ratioY);
+      const ag = Math.min(awg, ahg);
+      cropAreaWidth = ratioX * ag;
+      cropAreaHeight = ratioY * ag;
+      const iwg = Math.floor(cropImgWidth / ratioX);
+      const ihg = Math.floor(cropImgHeight / ratioY);
+      const ig = Math.min(iwg, ihg);
+      cropImgWidth = ratioX * ig;
+      cropImgHeight = ratioY * ig;
+    }
+  
+    if (cropImgWidth > cropAreaWidth) {
+      cropWidth = cropImgWidth / (naturalWidth / width);
+      cropHeight = cropImgHeight / (naturalHeight / height);
+    } else {
+      cropWidth = cropAreaWidth;
+      cropHeight = cropAreaHeight;
+    }
+  
+    return { width: cropWidth, height: cropHeight };
+  };
+
   const getCropCanvas = useCallback(
     (target: ShadowRoot) => {
       const canvas = document.createElement('canvas');
@@ -66,6 +103,8 @@ const ImgCrop = forwardRef<CropperRef, ImgCropProps>((props, cropperRef) => {
       const context = (target?.getRootNode?.() as ShadowRoot) || document;
 
       type ImgSource = CanvasImageSource & {
+        width: number;
+        height: number;
         naturalWidth: number;
         naturalHeight: number;
       };
@@ -118,17 +157,31 @@ const ImgCrop = forwardRef<CropperRef, ImgCropProps>((props, cropperRef) => {
           imgWidth,
           imgHeight,
         );
+        const mediaSize = {
+          width: squareWidth,
+          height: squareHeight,
+          naturalWidth: imgWidth,
+          naturalHeight: imgHeight,
+        };
+        const { width: adjustedCropWidth, height: adjustedCropHeight } = adjustCropSize(mediaSize);
 
         // crop rotated image
         const imgData = ctx.getImageData(0, 0, squareWidth, squareHeight);
-        canvas.width = cropWidth;
-        canvas.height = cropHeight;
+        canvas.width = adjustedCropWidth;
+        canvas.height = adjustedCropHeight;
         ctx.putImageData(imgData, -cropX, -cropY);
       } else {
-        canvas.width = cropWidth;
-        canvas.height = cropHeight;
+        const mediaSize = {
+          width: imgSource.width,
+          height: imgSource.height,
+          naturalWidth: imgSource.naturalWidth,
+          naturalHeight: imgSource.naturalHeight,
+        };
+        const { width: adjustedCropWidth, height: adjustedCropHeight } = adjustCropSize(mediaSize);
+        canvas.width = adjustedCropWidth;
+        canvas.height = adjustedCropHeight;
         ctx.fillStyle = fillColor;
-        ctx.fillRect(0, 0, cropWidth, cropHeight);
+        ctx.fillRect(0, 0, adjustedCropWidth, adjustedCropHeight);
 
         ctx.drawImage(
           imgSource,
@@ -138,14 +191,14 @@ const ImgCrop = forwardRef<CropperRef, ImgCropProps>((props, cropperRef) => {
           cropHeight,
           0,
           0,
-          cropWidth,
-          cropHeight,
+          adjustedCropWidth,
+          adjustedCropHeight,
         );
       }
 
       return canvas;
     },
-    [fillColor, rotationSlider],
+    [fillColor, rotationSlider, ratioX, ratioY],
   );
 
   /**
@@ -243,11 +296,11 @@ const ImgCrop = forwardRef<CropperRef, ImgCropProps>((props, cropperRef) => {
             easyCropRef.current!.onReset();
 
             const canvas = getCropCanvas(event.target as ShadowRoot);
-            const { type, name, uid } = processedFile as UploadFile;
+            const { name, uid } = processedFile as UploadFile;
 
             canvas.toBlob(
               async (blob) => {
-                const newFile = new File([blob as BlobPart], name, { type });
+                const newFile = new File([blob as BlobPart], name, { type: 'image/jpeg' });
                 Object.assign(newFile, { uid });
 
                 runBeforeUpload({
@@ -263,8 +316,8 @@ const ImgCrop = forwardRef<CropperRef, ImgCropProps>((props, cropperRef) => {
                   },
                 });
               },
-              type,
-              quality,
+              'image/jpeg',
+              0.95,
             );
           };
         });
@@ -307,8 +360,9 @@ const ImgCrop = forwardRef<CropperRef, ImgCropProps>((props, cropperRef) => {
 
   const lang = typeof window === 'undefined' ? '' : window.navigator.language;
   const isCN = lang === 'zh-CN';
-  const title = modalTitle || (isCN ? '编辑图片' : 'Edit image');
-  const resetBtnText = resetText || (isCN ? '重置' : 'Reset');
+  const isTW = lang === 'zh-TW';
+  const title = modalTitle || (isCN ? '编辑图片' : isTW ? '編輯圖片' : 'Edit image');
+  const resetBtnText = resetText || (isCN ? '重置' : isTW ? '重置' : 'Reset');
 
   return (
     <>
@@ -334,6 +388,8 @@ const ImgCrop = forwardRef<CropperRef, ImgCropProps>((props, cropperRef) => {
             showReset={showReset}
             resetBtnText={resetBtnText}
             modalImage={modalImage}
+            ratioX={ratioX}
+            ratioY={ratioY}
             aspect={aspect}
             minZoom={minZoom}
             maxZoom={maxZoom}

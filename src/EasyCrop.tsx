@@ -34,6 +34,8 @@ const EasyCrop = forwardRef<EasyCropRef, EasyCropProps>((props, ref) => {
     resetBtnText,
 
     modalImage,
+    ratioX,
+    ratioY,
     aspect: ASPECT_INITIAL,
     minZoom,
     maxZoom,
@@ -63,6 +65,18 @@ const EasyCrop = forwardRef<EasyCropRef, EasyCropProps>((props, ref) => {
 
   const onCropComplete = useCallback((_: Area, croppedAreaPixels: Area) => {
     cropPixelsRef.current = croppedAreaPixels;
+    let cropWidth = croppedAreaPixels.width
+    let cropHeight = croppedAreaPixels.height
+    if (ratioX!=null){
+      const wg = Math.floor(cropWidth / ratioX);
+      const hg = Math.floor(cropHeight / ratioY);
+      const g = Math.min(wg,hg);
+      cropWidth = ratioX * g;
+      cropHeight = ratioY * g;
+    }
+    croppedAreaPixels.width = cropWidth
+    croppedAreaPixels.height = cropHeight
+    cropPixelsRef.current = croppedAreaPixels
   }, []);
 
   useImperativeHandle(ref, () => ({
@@ -89,6 +103,8 @@ const EasyCrop = forwardRef<EasyCropRef, EasyCropProps>((props, ref) => {
         //
         zoom={zoom}
         rotation={rotation}
+        ratioX={ratioX}
+        ratioY={ratioY}
         aspect={aspect}
         minZoom={minZoom}
         maxZoom={maxZoom}
