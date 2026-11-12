@@ -66,7 +66,7 @@ const Demo = () => (
 | showGrid       | `boolean`            | `false`      | 显示裁切区域网格（九宫格）                                       |
 | cropperProps   | `object`             | -            | [react-easy-crop] 的 props（\* 已有 props 无法重写）             |
 | modalClassName | `string`             | `''`         | 弹窗 className                                                   |
-| modalTitle     | `string`             | `'编辑图片'` | 弹窗标题                                                         |
+| modalTitle     | `string`             | `'裁切'` | 弹窗标题                                                         |
 | modalWidth     | `number` \| `string` |              | 弹窗宽度                                                         |
 | modalOk        | `string`             |              | 确定按钮文字                                                     |
 | modalCancel    | `string`             |              | 取消按钮文字                                                     |

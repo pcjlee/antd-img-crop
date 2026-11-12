@@ -330,8 +330,8 @@ const ImgCrop = forwardRef<CropperRef, ImgCropProps>((props, cropperRef) => {
 
   const lang = typeof window === 'undefined' ? '' : window.navigator.language;
   const isCN = lang === 'zh-CN';
-  const title = modalTitle || (isCN ? '编辑图片' : 'Edit image');
-  const resetBtnText = resetText || (isCN ? '重置' : 'Reset');
+  const title = modalTitle || (isCN ? '裁切' : '裁切 Crop');
+  const resetBtnText = resetText || (isCN ? '重置' : '重置 Reset');
 
   return (
     <>
