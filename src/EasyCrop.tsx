@@ -5,11 +5,12 @@ import {
   memo,
   useCallback,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
 } from 'react';
 import Cropper from 'react-easy-crop';
-import type { Area, Point } from 'react-easy-crop';
+import type { Area, MediaSize, Point } from 'react-easy-crop';
 import {
   ASPECT_STEP,
   PREFIX,
@@ -21,6 +22,36 @@ import {
   ZOOM_STEP,
 } from './constants';
 import type { EasyCropProps, EasyCropRef } from './types';
+
+function aspectToRatio(aspect?: number): [number, number] {
+  if (!aspect || aspect <= 0) return [1, 1];
+
+  const common = [
+    [1, 1],
+    [4, 3],
+    [3, 2],
+    [16, 9],
+    [21, 9],
+    [3, 4],
+    [2, 3],
+    [9, 16],
+  ];
+
+  for (const [w, h] of common) {
+    if (Math.abs(aspect - w / h) < 0.001) {
+      return [w, h];
+    }
+  }
+
+  const precision = 1000;
+  let w = Math.round(aspect * precision);
+  let h = precision;
+
+  const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b));
+  const d = gcd(w, h);
+
+  return [w / d, h / d];
+}
 
 const EasyCrop = forwardRef<EasyCropRef, EasyCropProps>((props, ref) => {
   const {
@@ -49,9 +80,51 @@ const EasyCrop = forwardRef<EasyCropRef, EasyCropProps>((props, ref) => {
   const [aspect, setAspect] = useState(propAspect);
 
   const cropPixelsRef = useRef<Area>({ width: 0, height: 0, x: 0, y: 0 });
-  const onCropComplete = useCallback((_: Area, croppedAreaPixels: Area) => {
-    cropPixelsRef.current = croppedAreaPixels;
-  }, []);
+  const [cropSize, setCropSize] = useState({ width: 0, height: 0 });
+  const [ratioX, ratioY] = useMemo(() => aspectToRatio(aspect), [aspect]);
+
+  const onCropComplete = useCallback(
+    (_: Area, croppedAreaPixels: Area) => {
+      let { width: cropWidth, height: cropHeight } = croppedAreaPixels;
+
+      if (ratioX && ratioY) {
+        const wg = Math.floor(cropWidth / ratioX);
+        const hg = Math.floor(cropHeight / ratioY);
+        const g = Math.min(wg, hg);
+
+        cropWidth = ratioX * g;
+        cropHeight = ratioY * g;
+      }
+
+      cropPixelsRef.current = {
+        ...croppedAreaPixels,
+        width: cropWidth,
+        height: cropHeight,
+      };
+    },
+    [ratioX, ratioY],
+  );
+
+  const onMediaLoaded = useCallback(
+    (mediaSize: MediaSize) => {
+      const { width, height } = mediaSize;
+
+      if (!ratioX || !ratioY) {
+        setCropSize({ width, height });
+        return;
+      }
+
+      const awg = Math.floor(width / ratioX);
+      const ahg = Math.floor(height / ratioY);
+      const ag = Math.min(awg, ahg);
+
+      const cropWidth = ratioX * ag;
+      const cropHeight = ratioY * ag;
+
+      setCropSize({ width: cropWidth, height: cropHeight });
+    },
+    [ratioX, ratioY],
+  );
 
   const prevPropAspect = useRef(propAspect);
   if (prevPropAspect.current !== propAspect) {
@@ -90,6 +163,8 @@ const EasyCrop = forwardRef<EasyCropRef, EasyCropProps>((props, ref) => {
         {...cropperProps}
         ref={cropperRef}
         image={modalImage}
+        cropSize={cropSize}
+        onMediaLoaded={onMediaLoaded}
         crop={crop}
         zoom={zoom}
         rotation={rotation}
