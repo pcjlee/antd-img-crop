@@ -1,6 +1,8 @@
 node_modules
-dist
 
 example
 index.html
 vite.config.mts
+.pnp.cjs
+.pnp.loader.mjs
+install-state.gz
