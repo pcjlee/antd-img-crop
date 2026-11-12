@@ -1,7 +1,7 @@
 {
-  "name": "antd-img-crop",
+  "name": "@pcjlee/antd-img-crop",
   "version": "4.30.0",
-  "description": "An image cropper for Ant Design Upload",
+  "description": "A customized image cropper for Ant Design Upload",
   "keywords": [
     "react",
     "antd",
@@ -12,10 +12,10 @@
     "cropper"
   ],
   "license": "MIT",
-  "author": "nanxiaobei <nanxiaobei@gmail.com> (https://github.com/nanxiaobei)",
-  "homepage": "https://github.com/nanxiaobei/antd-img-crop",
-  "repository": "github:nanxiaobei/antd-img-crop",
-  "bugs": "https://github.com/nanxiaobei/antd-img-crop/issues",
+  "author": "pcjlee (https://github.com/pcjlee)",
+  "homepage": "https://github.com/pcjlee/antd-img-crop",
+  "repository": "github:pcjlee/antd-img-crop",
+  "bugs": "https://github.com/pcjlee/antd-img-crop/issues",
   "types": "./dist/antd-img-crop.d.ts",
   "module": "./dist/antd-img-crop.esm.js",
   "main": "./dist/antd-img-crop.cjs.js",
